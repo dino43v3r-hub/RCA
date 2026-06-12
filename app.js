@@ -5,7 +5,8 @@ const domainProfiles = {
     hypotheses: [
       {
         title: "Recent change introduced a service failure",
-        keywords: ["deploy", "deployment", "release", "change", "config", "configuration", "rollback", "version", "patch"],
+        keywords: ["deployment", "release", "change", "rollback"],
+        requiresDirectChangeEvidence: true,
         actions: ["Add change validation gates before release.", "Improve rollback readiness and ownership.", "Link monitoring alerts to recent change records."],
         solutions: ["Containment: roll back or disable the suspected change until service is stable.", "Permanent fix: add automated pre-release tests for the failed behavior.", "Verification: rerun the failed workflow and confirm alerts, latency, and error rates return to normal."]
       },
@@ -18,6 +19,7 @@ const domainProfiles = {
       {
         title: "C drive storage is being consumed by system, update, installer, or application cache growth",
         keywords: ["c drive", "drivesizegb", "freegb", "usedgb", "percentfree", "windowsinstaller_gb", "winsxs_gb", "programdata_gb", "ccmcache_gb", "softwaredistribution_gb", "top20files_gb", "top20folders_gb", "hiberfil.sys", "pagefile.sys", "installer", "cache", "winsxs", "fill", "fills", "full"],
+        storageRootCause: true,
         actions: ["Trend the largest storage categories over time instead of treating this as a user behavior issue.", "Identify whether growth is coming from Windows component store, installer cache, update cache, application cache, or fixed system files.", "Apply targeted cleanup or policy changes only to the confirmed growth source."],
         solutions: ["Containment: run Disk Cleanup/Storage Sense or approved enterprise cleanup against Windows Update cache, temp folders, and application caches on affected devices.", "Permanent fix: tune update/cache retention, installer cleanup policy, profile cleanup policy, or application deployment behavior based on the category that grows between snapshots.", "Verification: collect the same C drive inventory at 30, 60, and 90 days and confirm the suspected category no longer grows abnormally."]
       }
@@ -137,6 +139,7 @@ const elements = {
   timelineSignals: document.querySelector("#timelineSignals"),
   gaps: document.querySelector("#gaps"),
   actionsList: document.querySelector("#actionsList"),
+  recentChangeEvidence: document.querySelector("#recentChangeEvidence"),
   resolutionPlan: document.querySelector("#resolutionPlan")
 };
 
@@ -182,6 +185,7 @@ function analyzeEvidence() {
   const factors = buildContributingFactors(scored, best.title);
   const gaps = findGaps(text, timeline, confidence);
   const storageDrivers = buildStorageDriverEvidence(rawEvidence);
+  const recentChanges = buildRecentChangeEvidence(rawEvidence, text);
 
   elements.emptyState.classList.add("hidden");
   elements.analysisOutput.classList.remove("hidden");
@@ -194,6 +198,7 @@ function analyzeEvidence() {
 
   renderList(elements.supportingEvidence, storageDrivers.length || best.matches.length ? [...storageDrivers, ...best.matches] : ["No strong keyword-level causal signal was found. Add the action, symptom, timing, and resolution details to improve the analysis."]);
   renderList(elements.contributingFactors, factors);
+  renderList(elements.recentChangeEvidence, recentChanges);
   renderList(elements.timelineSignals, timeline.length ? timeline : ["No clear dates or times were detected. Add a short sequence of events if possible."]);
   renderList(elements.gaps, gaps);
   renderList(elements.actionsList, best.actions);
@@ -221,6 +226,8 @@ function scoreHypothesis(hypothesis, text, rawEvidence) {
   const matches = [];
   let score = 0;
   const keywordCap = hypothesis.keywordCap || 3;
+  const storageIntent = isStorageProblem(text, rawEvidence);
+  const directChangeEvidence = hasDirectChangeEvidence(rawEvidence);
 
   hypothesis.keywords.forEach((keyword) => {
     const count = countTerm(text, keyword);
@@ -230,9 +237,18 @@ function scoreHypothesis(hypothesis, text, rawEvidence) {
     }
   });
 
-  if (/c:\\|drivesizegb|freegb|usedgb|percentfree|windowsinstaller_gb|winsxs_gb|ccmcache_gb|softwaredistribution_gb/i.test(rawEvidence)
-    && /storage|drive|disk|fill|full|capacity/i.test(hypothesis.title)) {
-    score += 8;
+  if (hypothesis.requiresDirectChangeEvidence && !directChangeEvidence) {
+    score = Math.max(0, score - 18);
+    matches.push("Inventory terms such as deployment, version, configuration, or patch do not identify a specific recent change by themselves.");
+  }
+
+  if (hypothesis.requiresDirectChangeEvidence && storageIntent) {
+    score = Math.max(0, score - 12);
+    matches.push("The stated problem is C drive fill-up, so recent-change RCA requires a named change tied to storage growth.");
+  }
+
+  if (hypothesis.storageRootCause && storageIntent) {
+    score += 28;
     matches.push("Evidence contains C drive storage inventory fields, so the RCA should focus on technical storage growth drivers.");
   }
 
@@ -242,6 +258,15 @@ function scoreHypothesis(hypothesis, text, rawEvidence) {
   }
 
   return { ...hypothesis, score, matches };
+}
+
+function isStorageProblem(text, rawEvidence) {
+  return /\b(c drive|c:|drive|disk|storage|free space|usedgb|freegb|percentfree|fill|fills|filled|full|90 days)\b/i.test(text)
+    || /drivesizegb|freegb|usedgb|percentfree|windowsinstaller_gb|winsxs_gb|ccmcache_gb|softwaredistribution_gb/i.test(rawEvidence);
+}
+
+function hasDirectChangeEvidence(rawEvidence) {
+  return /\b(changed from|changed to|deployed at|deployed on|released on|installed on|updated on|after installing|after deployment|after patching|rollback|rolled back|reverted)\b/i.test(rawEvidence);
 }
 
 function countTerm(text, term) {
@@ -355,6 +380,31 @@ function buildStorageDriverEvidence(rawEvidence) {
   if (/pagefile\.sys/i.test(rawEvidence)) fixedFiles.push("pagefile.sys appears repeatedly, which is a fixed virtual memory file rather than a user behavior issue.");
 
   return [...drivers, ...fixedFiles].slice(0, 7);
+}
+
+function buildRecentChangeEvidence(rawEvidence, text) {
+  const lines = rawEvidence
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const candidateLines = lines
+    .filter((line) => /\b(changed from|changed to|deployed at|deployed on|released on|installed on|updated on|after installing|after deployment|after patching|rollback|rolled back|reverted)\b/i.test(line))
+    .slice(0, 5);
+
+  if (candidateLines.length) {
+    return candidateLines.map((line) => `Possible change signal: ${line}`);
+  }
+
+  if (isStorageProblem(text, rawEvidence)) {
+    return [
+      "No specific recent change is proven by the current evidence.",
+      "The evidence appears to be inventory/storage data, not a before-and-after change record.",
+      "To identify a recent change, add dated software installs, patch deployments, policy changes, or cleanup task changes from the same 90-day window."
+    ];
+  }
+
+  return ["No direct recent-change evidence was detected."];
 }
 
 function summarizeNumericColumn(headers, rows, column) {
@@ -503,6 +553,7 @@ function clearAnalysisOutput() {
     elements.timelineSignals,
     elements.gaps,
     elements.actionsList,
+    elements.recentChangeEvidence,
     elements.resolutionPlan
   ].forEach((node) => node.replaceChildren());
 }
