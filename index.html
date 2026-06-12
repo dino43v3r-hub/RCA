@@ -50,6 +50,14 @@
           </div>
           <p class="privacy-note">Evidence stays on this page only. Clear Case removes the pasted text, uploaded file contents, and analysis results.</p>
 
+          <label class="problem-label" for="problem">Problem</label>
+          <textarea
+            id="problem"
+            class="problem-input"
+            spellcheck="true"
+            placeholder="Describe the problem you need the RCA to explain. Example: Registration portal timed out for students for 50 minutes."
+          ></textarea>
+
           <label class="evidence-label" for="evidence">Evidence</label>
           <textarea
             id="evidence"
@@ -83,6 +91,11 @@
         </div>
 
         <div id="analysisOutput" class="analysis-output hidden">
+          <section>
+            <h3>Problem Being Analyzed</h3>
+            <p id="problemSummary" class="problem-summary"></p>
+          </section>
+
           <section>
             <h3>Likely Root Cause</h3>
             <p id="rootCause" class="root-cause"></p>

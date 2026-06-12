@@ -136,6 +136,7 @@ select {
   padding: 0 12px;
 }
 
+.problem-label,
 .evidence-label {
   margin-top: 4px;
 }
@@ -178,12 +179,28 @@ select {
   line-height: 1.4;
 }
 
+.problem-summary {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.problem-input {
+  min-height: 92px;
+  resize: vertical;
+}
+
 textarea {
   flex: 1;
   min-height: 460px;
   resize: none;
   padding: 16px;
   line-height: 1.5;
+}
+
+textarea.problem-input {
+  flex: 0 0 auto;
+  min-height: 92px;
 }
 
 select:focus,

@@ -102,6 +102,7 @@ const allHypotheses = Object.values(domainProfiles).flatMap((profile) => profile
 
 const elements = {
   domain: document.querySelector("#domain"),
+  problem: document.querySelector("#problem"),
   evidence: document.querySelector("#evidence"),
   fileUpload: document.querySelector("#fileUpload"),
   fileStatus: document.querySelector("#fileStatus"),
@@ -112,6 +113,7 @@ const elements = {
   analysisOutput: document.querySelector("#analysisOutput"),
   resultsTitle: document.querySelector("#results-title"),
   confidenceBadge: document.querySelector("#confidenceBadge"),
+  problemSummary: document.querySelector("#problemSummary"),
   rootCause: document.querySelector("#rootCause"),
   supportingEvidence: document.querySelector("#supportingEvidence"),
   contributingFactors: document.querySelector("#contributingFactors"),
@@ -130,6 +132,7 @@ const supportedFileTypes = [
 const supportedFileExtensions = [".txt", ".log", ".csv", ".json", ".md", ".xml", ".html", ".htm", ".yaml", ".yml"];
 const defaultFileStatus = "Text, logs, CSV, JSON, Markdown, XML, and HTML files can be added.";
 
+const sampleProblem = "Registration portal timed out for students for about 50 minutes.";
 const sampleEvidence = `June 10, 8:15 AM - Users reported that the student registration portal returned timeout errors.
 June 10, 8:25 AM - Monitoring showed API latency above 12 seconds. Database CPU was at 96%.
 June 10, 8:40 AM - The team noticed a deployment from 7:55 AM changed the search query used by the registration service.
@@ -138,6 +141,7 @@ Impact: Students could not complete registration for about 50 minutes.
 Notes: No alert fired until after users reported the issue.`;
 
 function analyzeEvidence() {
+  const rawProblem = elements.problem.value.trim();
   const rawEvidence = elements.evidence.value.trim();
 
   if (!rawEvidence) {
@@ -145,7 +149,8 @@ function analyzeEvidence() {
     return;
   }
 
-  const text = rawEvidence.toLowerCase();
+  const combinedInput = `${rawProblem}\n${rawEvidence}`.trim();
+  const text = combinedInput.toLowerCase();
   const selectedDomain = chooseDomain(text);
   const profile = domainProfiles[selectedDomain];
   const candidates = selectedDomain === "general" ? allHypotheses : [...profile.hypotheses, ...domainProfiles.general.hypotheses];
@@ -163,6 +168,7 @@ function analyzeEvidence() {
   elements.analysisOutput.classList.remove("hidden");
   elements.resultsTitle.textContent = profile.label;
   elements.confidenceBadge.textContent = `${confidence}%`;
+  elements.problemSummary.textContent = rawProblem || "No separate problem statement provided. The analyzer inferred the problem from the evidence.";
   elements.rootCause.textContent = best.score > 0
     ? best.title
     : "The evidence does not contain enough causal signals for a defensible root cause yet.";
@@ -220,6 +226,7 @@ function countTerm(text, term) {
 function calculateConfidence(score, rawEvidence, text) {
   let confidence = Math.min(72, 28 + score * 8);
 
+  if (elements.problem.value.trim().length >= 20) confidence += 6;
   if (extractTimeline(rawEvidence).length >= 2) confidence += 8;
   if (/\b(impact|affected|users|students|customers|injury|defect)\b/.test(text)) confidence += 5;
   if (/\b(rollback|reverted|restored|fixed|resolved)\b/.test(text)) confidence += 8;
@@ -254,6 +261,7 @@ function buildContributingFactors(scored, bestTitle) {
 function findGaps(text, timeline, confidence) {
   const gaps = [];
 
+  if (elements.problem.value.trim().length < 20) gaps.push("Add a clear problem statement so the RCA has a specific outcome to explain.");
   if (!timeline.length) gaps.push("Add a timeline showing what happened before, during, and after the incident.");
   if (!/\b(impact|affected|duration|cost|injury|defect|outage)\b/.test(text)) gaps.push("Add the impact, scope, duration, or affected people/systems.");
   if (!/\b(fixed|resolved|rollback|corrected|contained|restored)\b/.test(text)) gaps.push("Add what action restored normal conditions or stopped the issue.");
@@ -334,6 +342,7 @@ function showEmpty(title) {
 }
 
 function clearAnalysisOutput() {
+  elements.problemSummary.textContent = "";
   elements.rootCause.textContent = "";
   [
     elements.supportingEvidence,
@@ -345,6 +354,7 @@ function clearAnalysisOutput() {
 }
 
 function clearCase() {
+  elements.problem.value = "";
   elements.evidence.value = "";
   elements.fileUpload.value = "";
   elements.domain.value = "auto";
@@ -356,6 +366,7 @@ elements.fileUpload.addEventListener("change", addUploadedFiles);
 elements.analyzeButton.addEventListener("click", analyzeEvidence);
 elements.clearButton.addEventListener("click", clearCase);
 elements.sampleButton.addEventListener("click", () => {
+  elements.problem.value = sampleProblem;
   elements.evidence.value = sampleEvidence;
   elements.fileUpload.value = "";
   elements.fileStatus.textContent = "Sample evidence loaded. Clear Case removes it.";
