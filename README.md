@@ -8,6 +8,12 @@ Open `index.html` in a browser.
 
 No build step and no dependencies are required.
 
+## Privacy
+
+The app is static and browser-only. It does not upload, store, track, or transmit evidence. It does not use entered evidence as learning material for future RCA results.
+
+The current page includes a Content Security Policy with `connect-src 'none'` to block outbound network requests from the app.
+
 ## Current Scope
 
 The first version uses transparent rule-based analysis so the result can run locally and explain why it reached a conclusion. It is designed as an MVP foundation for a future AI-backed RCA engine.

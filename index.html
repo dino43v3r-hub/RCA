@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'"
+    >
     <title>RCA Evidence Analyzer</title>
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -44,7 +48,7 @@
             >
             <p id="fileStatus" class="file-status">Text, logs, CSV, JSON, Markdown, XML, and HTML files can be added.</p>
           </div>
-          <p class="privacy-note">Evidence stays on this page only. Clear Case removes the pasted text, uploaded file contents, and analysis results.</p>
+          <p class="privacy-note">Private by design: evidence is processed only in this browser page. Nothing is uploaded, stored, tracked, or used to train/learn from future RCA cases. Clear Case removes the pasted text, uploaded file contents, and analysis results.</p>
 
           <label class="problem-label" for="problem">Problem</label>
           <textarea
