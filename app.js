@@ -127,7 +127,6 @@ const elements = {
   fileStatus: document.querySelector("#fileStatus"),
   analyzeButton: document.querySelector("#analyzeButton"),
   clearButton: document.querySelector("#clearButton"),
-  sampleButton: document.querySelector("#sampleButton"),
   emptyState: document.querySelector("#emptyState"),
   analysisOutput: document.querySelector("#analysisOutput"),
   resultsTitle: document.querySelector("#results-title"),
@@ -152,14 +151,6 @@ const supportedFileTypes = [
 
 const supportedFileExtensions = [".txt", ".log", ".csv", ".json", ".md", ".xml", ".html", ".htm", ".yaml", ".yml"];
 const defaultFileStatus = "Text, logs, CSV, JSON, Markdown, XML, and HTML files can be added.";
-
-const sampleProblem = "Registration portal timed out for students for about 50 minutes.";
-const sampleEvidence = `June 10, 8:15 AM - Users reported that the student registration portal returned timeout errors.
-June 10, 8:25 AM - Monitoring showed API latency above 12 seconds. Database CPU was at 96%.
-June 10, 8:40 AM - The team noticed a deployment from 7:55 AM changed the search query used by the registration service.
-June 10, 9:05 AM - Rolling back the release restored response times.
-Impact: Students could not complete registration for about 50 minutes.
-Notes: No alert fired until after users reported the issue.`;
 
 function analyzeEvidence() {
   const rawProblem = elements.problem.value.trim();
@@ -570,11 +561,3 @@ function clearCase() {
 elements.fileUpload.addEventListener("change", addUploadedFiles);
 elements.analyzeButton.addEventListener("click", analyzeEvidence);
 elements.clearButton.addEventListener("click", clearCase);
-elements.sampleButton.addEventListener("click", () => {
-  elements.problem.value = sampleProblem;
-  elements.evidence.value = sampleEvidence;
-  elements.fileUpload.value = "";
-  elements.fileStatus.textContent = "Sample evidence loaded. Clear Case removes it.";
-  elements.domain.value = "auto";
-  analyzeEvidence();
-});
