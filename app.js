@@ -14,6 +14,12 @@ const domainProfiles = {
         keywords: ["capacity", "cpu", "memory", "disk", "queue", "timeout", "dependency", "database", "network", "latency"],
         actions: ["Set capacity thresholds with alerting.", "Create dependency health checks.", "Run load and failover testing."],
         solutions: ["Containment: reduce load, scale capacity, or route traffic around the failing dependency.", "Permanent fix: increase capacity limits and add dependency failover behavior.", "Verification: confirm normal response times under expected peak load."]
+      },
+      {
+        title: "C drive storage is being consumed by system, update, installer, or application cache growth",
+        keywords: ["c drive", "drivesizegb", "freegb", "usedgb", "percentfree", "windowsinstaller_gb", "winsxs_gb", "programdata_gb", "ccmcache_gb", "softwaredistribution_gb", "top20files_gb", "top20folders_gb", "hiberfil.sys", "pagefile.sys", "installer", "cache", "winsxs", "fill", "fills", "full"],
+        actions: ["Trend the largest storage categories over time instead of treating this as a user behavior issue.", "Identify whether growth is coming from Windows component store, installer cache, update cache, application cache, or fixed system files.", "Apply targeted cleanup or policy changes only to the confirmed growth source."],
+        solutions: ["Containment: run Disk Cleanup/Storage Sense or approved enterprise cleanup against Windows Update cache, temp folders, and application caches on affected devices.", "Permanent fix: tune update/cache retention, installer cleanup policy, profile cleanup policy, or application deployment behavior based on the category that grows between snapshots.", "Verification: collect the same C drive inventory at 30, 60, and 90 days and confirm the suspected category no longer grows abnormally."]
       }
     ]
   },
@@ -175,6 +181,7 @@ function analyzeEvidence() {
   const timeline = extractTimeline(rawEvidence);
   const factors = buildContributingFactors(scored, best.title);
   const gaps = findGaps(text, timeline, confidence);
+  const storageDrivers = buildStorageDriverEvidence(rawEvidence);
 
   elements.emptyState.classList.add("hidden");
   elements.analysisOutput.classList.remove("hidden");
@@ -185,7 +192,7 @@ function analyzeEvidence() {
     ? best.title
     : "The evidence does not contain enough causal signals for a defensible root cause yet.";
 
-  renderList(elements.supportingEvidence, best.matches.length ? best.matches : ["No strong keyword-level causal signal was found. Add the action, symptom, timing, and resolution details to improve the analysis."]);
+  renderList(elements.supportingEvidence, storageDrivers.length || best.matches.length ? [...storageDrivers, ...best.matches] : ["No strong keyword-level causal signal was found. Add the action, symptom, timing, and resolution details to improve the analysis."]);
   renderList(elements.contributingFactors, factors);
   renderList(elements.timelineSignals, timeline.length ? timeline : ["No clear dates or times were detected. Add a short sequence of events if possible."]);
   renderList(elements.gaps, gaps);
@@ -213,14 +220,21 @@ function chooseDomain(text) {
 function scoreHypothesis(hypothesis, text, rawEvidence) {
   const matches = [];
   let score = 0;
+  const keywordCap = hypothesis.keywordCap || 3;
 
   hypothesis.keywords.forEach((keyword) => {
     const count = countTerm(text, keyword);
     if (count > 0) {
-      score += count;
+      score += Math.min(count, keywordCap);
       matches.push(`Detected "${keyword}" ${count === 1 ? "once" : `${count} times`} in the evidence.`);
     }
   });
+
+  if (/c:\\|drivesizegb|freegb|usedgb|percentfree|windowsinstaller_gb|winsxs_gb|ccmcache_gb|softwaredistribution_gb/i.test(rawEvidence)
+    && /storage|drive|disk|fill|full|capacity/i.test(hypothesis.title)) {
+    score += 8;
+    matches.push("Evidence contains C drive storage inventory fields, so the RCA should focus on technical storage growth drivers.");
+  }
 
   if (/\b(rollback|reverted|restored|fixed|resolved|after|before|because|caused by|due to)\b/i.test(rawEvidence)) {
     score += 2;
@@ -282,6 +296,114 @@ function findGaps(text, timeline, confidence) {
   if (confidence < 55) gaps.push("Collect direct evidence linking the suspected cause to the observed effect before treating this as final.");
 
   return gaps.length ? gaps : ["No major evidence gaps detected, but the conclusion should still be reviewed by a responsible human owner."];
+}
+
+function buildStorageDriverEvidence(rawEvidence) {
+  if (!/drivesizegb|freegb|usedgb|percentfree/i.test(rawEvidence)) {
+    return [];
+  }
+
+  const lines = rawEvidence.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  const headerIndex = lines.findIndex((line) => /drivesizegb/i.test(line) && /freegb/i.test(line));
+
+  if (headerIndex === -1) {
+    return [];
+  }
+
+  const headers = parseCsvLine(lines[headerIndex]);
+  const rows = lines
+    .slice(headerIndex + 1)
+    .filter((line) => line.startsWith("\""))
+    .slice(0, 250)
+    .map(parseCsvLine)
+    .filter((row) => row.length === headers.length);
+
+  if (!rows.length) {
+    return [];
+  }
+
+  const trackedColumns = [
+    "WindowsInstaller_GB",
+    "WinSxS_GB",
+    "ProgramData_GB",
+    "WindowsTemp_GB",
+    "CCMCache_GB",
+    "SoftwareDistribution_GB",
+    "LiveKernelReports_GB",
+    "WindowsErrorReporting_GB",
+    "TotalProfiles_GB",
+    "TotalOutlookOST_GB",
+    "TotalOneDriveLocal_GB",
+    "TotalTeams_GB",
+    "TotalPackages_GB",
+    "Downloads_GB",
+    "Desktop_GB",
+    "AppDataLocal_GB",
+    "BrowserCache_GB",
+    "RecycleBin_GB"
+  ];
+
+  const drivers = trackedColumns
+    .map((column) => summarizeNumericColumn(headers, rows, column))
+    .filter(Boolean)
+    .sort((a, b) => b.average - a.average)
+    .slice(0, 5)
+    .map((item) => `${item.column} averages ${item.average.toFixed(2)} GB across sampled devices; highest observed value is ${item.max.toFixed(2)} GB.`);
+
+  const fixedFiles = [];
+  if (/hiberfil\.sys/i.test(rawEvidence)) fixedFiles.push("hiberfil.sys appears repeatedly, which is a fixed hibernation file rather than a user behavior issue.");
+  if (/pagefile\.sys/i.test(rawEvidence)) fixedFiles.push("pagefile.sys appears repeatedly, which is a fixed virtual memory file rather than a user behavior issue.");
+
+  return [...drivers, ...fixedFiles].slice(0, 7);
+}
+
+function summarizeNumericColumn(headers, rows, column) {
+  const index = headers.indexOf(column);
+
+  if (index === -1) {
+    return null;
+  }
+
+  const values = rows
+    .map((row) => Number.parseFloat(row[index]))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (!values.length) {
+    return null;
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return {
+    column,
+    average: total / values.length,
+    max: Math.max(...values)
+  };
+}
+
+function parseCsvLine(line) {
+  const values = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    const nextCharacter = line[index + 1];
+
+    if (character === "\"" && nextCharacter === "\"") {
+      current += "\"";
+      index += 1;
+    } else if (character === "\"") {
+      inQuotes = !inQuotes;
+    } else if (character === "," && !inQuotes) {
+      values.push(current);
+      current = "";
+    } else {
+      current += character;
+    }
+  }
+
+  values.push(current);
+  return values;
 }
 
 function buildResolutionPlan(hypothesis, confidence) {

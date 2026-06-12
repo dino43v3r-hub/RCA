@@ -30,6 +30,8 @@ Supported focus areas:
 - Education / Administrative Operations
 - General RCA
 
+For IT storage cases, CSV evidence with fields such as `DriveSizeGB`, `FreeGB`, `UsedGB`, `WindowsInstaller_GB`, `WinSxS_GB`, `ProgramData_GB`, and profile/cache columns is summarized to identify likely technical space consumers.
+
 ## Product Direction
 
 The user should only need to provide the problem and evidence. The app should infer the likely root cause, show the basis for that inference, recommend solutions, and flag what still needs to be proven before the conclusion is final.
