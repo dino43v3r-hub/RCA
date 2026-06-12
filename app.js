@@ -6,12 +6,14 @@ const domainProfiles = {
       {
         title: "Recent change introduced a service failure",
         keywords: ["deploy", "deployment", "release", "change", "config", "configuration", "rollback", "version", "patch"],
-        actions: ["Add change validation gates before release.", "Improve rollback readiness and ownership.", "Link monitoring alerts to recent change records."]
+        actions: ["Add change validation gates before release.", "Improve rollback readiness and ownership.", "Link monitoring alerts to recent change records."],
+        solutions: ["Containment: roll back or disable the suspected change until service is stable.", "Permanent fix: add automated pre-release tests for the failed behavior.", "Verification: rerun the failed workflow and confirm alerts, latency, and error rates return to normal."]
       },
       {
         title: "Capacity or dependency failure caused degraded service",
         keywords: ["capacity", "cpu", "memory", "disk", "queue", "timeout", "dependency", "database", "network", "latency"],
-        actions: ["Set capacity thresholds with alerting.", "Create dependency health checks.", "Run load and failover testing."]
+        actions: ["Set capacity thresholds with alerting.", "Create dependency health checks.", "Run load and failover testing."],
+        solutions: ["Containment: reduce load, scale capacity, or route traffic around the failing dependency.", "Permanent fix: increase capacity limits and add dependency failover behavior.", "Verification: confirm normal response times under expected peak load."]
       }
     ]
   },
@@ -22,12 +24,14 @@ const domainProfiles = {
       {
         title: "Compromised identity or endpoint enabled unauthorized activity",
         keywords: ["phishing", "credential", "password", "mfa", "login", "impossible travel", "endpoint", "malware", "token", "unauthorized"],
-        actions: ["Reset affected credentials and revoke active sessions.", "Review MFA coverage and conditional access.", "Preserve endpoint and identity logs for review."]
+        actions: ["Reset affected credentials and revoke active sessions.", "Review MFA coverage and conditional access.", "Preserve endpoint and identity logs for review."],
+        solutions: ["Containment: disable affected sessions, isolate impacted endpoints, and reset credentials.", "Permanent fix: close the identity or endpoint control gap that allowed access.", "Verification: confirm no continued suspicious logins, alerts, or endpoint indicators remain."]
       },
       {
         title: "Detection or control gap allowed suspicious activity to continue",
         keywords: ["missed", "alert", "suppressed", "allowlist", "exception", "no alert", "not detected", "bypass"],
-        actions: ["Tune detection rules.", "Review security exceptions.", "Add escalation criteria for repeated alerts."]
+        actions: ["Tune detection rules.", "Review security exceptions.", "Add escalation criteria for repeated alerts."],
+        solutions: ["Containment: manually review the affected activity window for unresolved exposure.", "Permanent fix: update detection rules, alert routing, and exception expiration.", "Verification: replay or simulate the condition and confirm detection fires as expected."]
       }
     ]
   },
@@ -38,12 +42,14 @@ const domainProfiles = {
       {
         title: "Procedure, training, or hazard control was insufficient",
         keywords: ["procedure", "training", "unclear", "not trained", "ppe", "hazard", "supervision", "shortcut", "inspection"],
-        actions: ["Update the procedure and retrain affected staff.", "Verify PPE availability and use.", "Add a pre-task hazard check."]
+        actions: ["Update the procedure and retrain affected staff.", "Verify PPE availability and use.", "Add a pre-task hazard check."],
+        solutions: ["Containment: pause the affected task until hazards and required controls are confirmed.", "Permanent fix: revise the procedure, retrain staff, and require documented hazard checks.", "Verification: observe the task and confirm the revised controls are being followed."]
       },
       {
         title: "Equipment or environmental condition contributed to the incident",
         keywords: ["equipment", "machine", "guard", "floor", "spill", "lighting", "weather", "maintenance", "defect"],
-        actions: ["Inspect and repair affected equipment.", "Document environmental controls.", "Add recurring maintenance verification."]
+        actions: ["Inspect and repair affected equipment.", "Document environmental controls.", "Add recurring maintenance verification."],
+        solutions: ["Containment: remove affected equipment or area from service until safe.", "Permanent fix: repair the condition and add inspection or maintenance controls.", "Verification: document inspection results and confirm no repeat hazard is present."]
       }
     ]
   },
@@ -54,7 +60,8 @@ const domainProfiles = {
       {
         title: "Process deviation or material variation caused the defect",
         keywords: ["batch", "lot", "supplier", "material", "deviation", "tolerance", "calibration", "inspection", "defect"],
-        actions: ["Quarantine affected batches.", "Verify calibration and process parameters.", "Review supplier and material records."]
+        actions: ["Quarantine affected batches.", "Verify calibration and process parameters.", "Review supplier and material records."],
+        solutions: ["Containment: quarantine affected lots and stop further release.", "Permanent fix: correct the process parameter, supplier issue, or inspection gap.", "Verification: retest affected samples and confirm future lots meet tolerance."]
       }
     ]
   },
@@ -65,7 +72,8 @@ const domainProfiles = {
       {
         title: "Control design or execution gap allowed noncompliance",
         keywords: ["control", "policy", "approval", "exception", "access", "missing evidence", "requirement", "review", "segregation"],
-        actions: ["Clarify the control owner and required evidence.", "Add periodic control testing.", "Create exception approval and expiration rules."]
+        actions: ["Clarify the control owner and required evidence.", "Add periodic control testing.", "Create exception approval and expiration rules."],
+        solutions: ["Containment: identify affected records, access, or approvals and correct immediate exceptions.", "Permanent fix: redesign the control so ownership, evidence, and timing are explicit.", "Verification: perform a sample test and confirm the control produces auditable evidence."]
       }
     ]
   },
@@ -76,7 +84,8 @@ const domainProfiles = {
       {
         title: "Process handoff or communication gap caused the service failure",
         keywords: ["handoff", "communication", "email", "deadline", "workflow", "approval", "queue", "student", "advising"],
-        actions: ["Define handoff ownership and due dates.", "Add status visibility for the requester.", "Create escalation rules for stalled cases."]
+        actions: ["Define handoff ownership and due dates.", "Add status visibility for the requester.", "Create escalation rules for stalled cases."],
+        solutions: ["Containment: identify stalled cases and assign an owner for immediate completion.", "Permanent fix: define handoff rules, status visibility, and escalation thresholds.", "Verification: review new cases after implementation and confirm they move within expected timeframes."]
       }
     ]
   },
@@ -87,12 +96,14 @@ const domainProfiles = {
       {
         title: "Process breakdown caused the observed failure",
         keywords: ["unclear", "missed", "late", "manual", "handoff", "approval", "procedure", "communication", "error"],
-        actions: ["Document the intended process.", "Assign ownership for each handoff.", "Add verification before final completion."]
+        actions: ["Document the intended process.", "Assign ownership for each handoff.", "Add verification before final completion."],
+        solutions: ["Containment: assign an owner to correct the affected case or backlog.", "Permanent fix: document the process, owners, deadlines, and required checks.", "Verification: audit a small sample and confirm the process works without manual rescue."]
       },
       {
         title: "Human, tool, or information gap contributed to the outcome",
         keywords: ["training", "access", "tool", "system", "information", "unknown", "mistake", "confusing"],
-        actions: ["Close the information gap.", "Improve job aids and training.", "Reduce manual steps where possible."]
+        actions: ["Close the information gap.", "Improve job aids and training.", "Reduce manual steps where possible."],
+        solutions: ["Containment: give the affected users the missing access, instruction, or tool support.", "Permanent fix: update training, job aids, system prompts, or automation.", "Verification: have a user repeat the task and confirm the same confusion or error does not recur."]
       }
     ]
   }
@@ -119,7 +130,8 @@ const elements = {
   contributingFactors: document.querySelector("#contributingFactors"),
   timelineSignals: document.querySelector("#timelineSignals"),
   gaps: document.querySelector("#gaps"),
-  actionsList: document.querySelector("#actionsList")
+  actionsList: document.querySelector("#actionsList"),
+  resolutionPlan: document.querySelector("#resolutionPlan")
 };
 
 const supportedFileTypes = [
@@ -178,6 +190,7 @@ function analyzeEvidence() {
   renderList(elements.timelineSignals, timeline.length ? timeline : ["No clear dates or times were detected. Add a short sequence of events if possible."]);
   renderList(elements.gaps, gaps);
   renderList(elements.actionsList, best.actions);
+  renderList(elements.resolutionPlan, buildResolutionPlan(best, confidence));
 }
 
 function chooseDomain(text) {
@@ -271,6 +284,24 @@ function findGaps(text, timeline, confidence) {
   return gaps.length ? gaps : ["No major evidence gaps detected, but the conclusion should still be reviewed by a responsible human owner."];
 }
 
+function buildResolutionPlan(hypothesis, confidence) {
+  if (hypothesis.score <= 0) {
+    return [
+      "Containment: stabilize the affected people, system, product, or process before making permanent changes.",
+      "Permanent fix: gather stronger evidence before selecting a corrective action.",
+      "Verification: rerun the failed process after the fix and compare results against the original problem."
+    ];
+  }
+
+  const plan = [...hypothesis.solutions];
+
+  if (confidence < 60) {
+    plan.push("Decision check: treat this as a proposed solution until the evidence gap is closed.");
+  }
+
+  return plan;
+}
+
 function renderList(node, items) {
   node.replaceChildren();
   items.forEach((item) => {
@@ -349,7 +380,8 @@ function clearAnalysisOutput() {
     elements.contributingFactors,
     elements.timelineSignals,
     elements.gaps,
-    elements.actionsList
+    elements.actionsList,
+    elements.resolutionPlan
   ].forEach((node) => node.replaceChildren());
 }
 

@@ -1,6 +1,6 @@
 # RCA Evidence Analyzer
 
-A lightweight root-cause analysis app. Enter the problem that needs to be explained, paste evidence or upload text-based files, choose a focus area or auto-detect the domain, and the app returns the most likely root cause with supporting signals, contributing factors, evidence gaps, timeline signals, and corrective actions.
+A lightweight root-cause analysis app. Enter the problem that needs to be explained, paste evidence or upload text-based files, choose a focus area or auto-detect the domain, and the app returns the most likely root cause with supporting signals, contributing factors, evidence gaps, timeline signals, corrective actions, and a resolution plan.
 
 ## Run
 
@@ -32,7 +32,7 @@ Supported focus areas:
 
 ## Product Direction
 
-The user should only need to provide evidence. The app should infer the likely root cause, show the basis for that inference, and flag what still needs to be proven before the conclusion is final.
+The user should only need to provide the problem and evidence. The app should infer the likely root cause, show the basis for that inference, recommend solutions, and flag what still needs to be proven before the conclusion is final.
 
 Future improvements:
 
