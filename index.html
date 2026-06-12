@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RCA Evidence Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace" aria-labelledby="app-title">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Root Cause Analysis</p>
+            <h1 id="app-title">Evidence Analyzer</h1>
+          </div>
+          <button id="sampleButton" class="ghost-button" type="button" title="Load sample evidence">
+            <span aria-hidden="true">+</span>
+            Sample
+          </button>
+        </header>
+
+        <section class="entry-panel">
+          <div class="field-row">
+            <label for="domain">Focus</label>
+            <select id="domain">
+              <option value="auto">Auto-detect</option>
+              <option value="it">IT / Service Incident</option>
+              <option value="cybersecurity">Cybersecurity</option>
+              <option value="safety">Workplace Safety</option>
+              <option value="quality">Manufacturing / Quality</option>
+              <option value="compliance">Compliance / Audit</option>
+              <option value="education">Education / Administrative Operations</option>
+              <option value="general">General RCA</option>
+            </select>
+          </div>
+
+          <div class="upload-row">
+            <label class="upload-button" for="fileUpload">
+              <span aria-hidden="true">+</span>
+              Add Files
+            </label>
+            <input
+              id="fileUpload"
+              type="file"
+              multiple
+              accept=".txt,.log,.csv,.json,.md,.xml,.html,.htm,.yaml,.yml,text/*,application/json"
+            >
+            <p id="fileStatus" class="file-status">Text, logs, CSV, JSON, Markdown, XML, and HTML files can be added.</p>
+          </div>
+          <p class="privacy-note">Evidence stays on this page only. Clear Case removes the pasted text, uploaded file contents, and analysis results.</p>
+
+          <label class="evidence-label" for="evidence">Evidence</label>
+          <textarea
+            id="evidence"
+            spellcheck="true"
+            placeholder="Paste evidence here, or add files above. Include dates, actions taken, symptoms, impact, and what restored normal conditions if known."
+          ></textarea>
+
+          <div class="actions">
+            <button id="analyzeButton" class="primary-button" type="button">
+              <span aria-hidden="true">?</span>
+              Find Root Cause
+            </button>
+            <button id="clearButton" class="secondary-button" type="button">
+              Clear Case
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <aside class="results" aria-live="polite" aria-labelledby="results-title">
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">Analysis</p>
+            <h2 id="results-title">Awaiting Evidence</h2>
+          </div>
+          <div id="confidenceBadge" class="confidence">0%</div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          Add evidence and run the analyzer. The result will show the most likely root cause, why it was selected, what evidence supports it, and what still needs verification.
+        </div>
+
+        <div id="analysisOutput" class="analysis-output hidden">
+          <section>
+            <h3>Likely Root Cause</h3>
+            <p id="rootCause" class="root-cause"></p>
+          </section>
+
+          <section>
+            <h3>Why This Is Likely</h3>
+            <ul id="supportingEvidence"></ul>
+          </section>
+
+          <section>
+            <h3>Contributing Factors</h3>
+            <ul id="contributingFactors"></ul>
+          </section>
+
+          <section>
+            <h3>Timeline Signals</h3>
+            <ul id="timelineSignals"></ul>
+          </section>
+
+          <section>
+            <h3>Gaps To Verify</h3>
+            <ul id="gaps"></ul>
+          </section>
+
+          <section>
+            <h3>Recommended Corrective Actions</h3>
+            <ul id="actionsList"></ul>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
